@@ -39,7 +39,7 @@ create table transacoes (
 
 
 --CRIACAO DOS TIPOS DE CATEGORIAS
-insert into 
+insert into categorias 
 (nome, descricao) 
 values 
 ('Salario', 'Receita líquida recebida por trabalho no regime CLT.'), 
