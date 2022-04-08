@@ -2,14 +2,18 @@ const express = require('express');
 
 const categorias  = require('./controladores/categorias');
 const usuarios = require('./controladores/usuarios');
+const validarLogin = require('./intermediarios/validacao_usuario');
 
 const rota = express();
 
 //ROTAS USUARIOS
-rota.get('/usuario', );
-rota.post('/login', );
 rota.post('/usuario', usuarios.cadastrarUsuario);
-rota.put('/usuario', );
+rota.post('/login', usuarios.login);
+
+rota.use(validarLogin);
+
+rota.get('/usuario', usuarios.listarPerfilUsuarios);
+rota.put('/usuario/:id', usuarios.atualizarUsuario);
 
 //ROTAS TRANSAÇÕES
 rota.get('/transacao', );
