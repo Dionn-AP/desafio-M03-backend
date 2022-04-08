@@ -3,16 +3,17 @@ const securePassword = require('secure-password');
 const pwd = securePassword();
 const jwt = require('jsonwebtoken');
 const jwtSecret = require('../chave_secreta/jwt_segredo');
-// const fs = require('fs/promises');
+
+const { verificarBodyCadastroUsuario, verificarBodyLogin } 
+= require('../funcoes_verificacao/verificar_requisicao_body');
 
 
 const cadastrarUsuario = async (req, res) => {
     const { nome, email, senha } = req.body;
 
-    if(!nome) { return res.status(400).json("O nome é obrigatório.") };
-    if(!email) { return res.status(400).json("O email é obrigatório.") };
-    if(!senha) { return res.status(400).json("A senha é obrigatória.") };
-    if(senha.length < 8) { return res.status(400).json("A senha precisa ter no mínimo 8 caracteres.") };
+    const erro = verificarBodyCadastroUsuario(req.body);
+    
+    if (erro) { return res.status(400).json({"mensagem": erro}) };
 
     try {
         const query = `select * from usuarios where email = $1`;
@@ -36,18 +37,17 @@ const cadastrarUsuario = async (req, res) => {
             hash
         ]);
 
+        const queryUsuario = `select * from usuarios where email = $1`;
+        const {rows: usuarioEncontrado} = await conexao.query(queryUsuario, [email]);
+
         if (usuarioCadastrado.rowCount === 0) {
-            return res.status(400).json('Não foi possivel cadastar o usuario');
+            return res.status(400).json({"mensagem": "Não foi possivel cadastar o usuario"});
         }
 
-        const { rows: usuario } = await conexao.query(`
-            select * from usuarios where email = $1`, [email]
-        );
-
-        return res.status(200).json({
-            id: usuario[0].id,
-            nome: usuario[0].nome,
-            email: usuario[0].email
+        return res.status(201).json({
+            id: usuarioEncontrado[0].id,
+            nome: usuarioEncontrado[0].nome,
+            email: usuarioEncontrado[0].email
         });
 
     } catch (error) {
@@ -59,41 +59,51 @@ const cadastrarUsuario = async (req, res) => {
 const listarPerfilUsuarios = async (req, res) => {
     const { usuario } = req;
 
-    return res.status(200).json(usuario);
-
-    // try {
+    try {
         
-    //     const { rows: usuarios } = await conexao.query(`select * from usuarios`);
+        const { rows: perfilUsuarios } = await conexao.query(`select * from usuarios where id = $1`, [usuario.id]);
 
-    //     // for (const usuario of usuarios) {
-    //     //     const { rows: emprestimos } = await conexao.query(
-    //     //         `select e.id, e.usuario_id, e.livro_id, e.status, l.nome as livro from emprestimos e 
-    //     //         left join livros l on e.livro_id = l.id 
-    //     //         where usuario_id = $1`, 
-    //     //         [usuario.id]
-    //     //     );
-            
-    //     //     usuario.emprestimos = emprestimos;
-    //     // }
+        return res.status(200).json({
+            "id": perfilUsuarios[0].id,
+            "nome": perfilUsuarios[0].nome,
+            "email": perfilUsuarios[0].email
+        });
 
-        
-
-    // } catch (error) {
-    //     return res.status(400).json(error.message);
-    // }
+    } catch (error) {
+        return res.status(400).json(error.message);
+    }
 };
 
 
 const atualizarUsuario = async (req, res) => {
-    const { id } = req.params;
-    const { nome, idade, email, telefone, cpf, senha } = req.body;
+    const { usuario } = req;
+    const { nome, email, senha } = req.body;
+
+    const erro = verificarBodyCadastroUsuario(req.body);
+    
+    if (erro) { return res.status(400).json({"mensagem": erro}) };
 
     try {
-        const {rows: usuario} = await conexao.query('select * from usuarios where id = $1', [id]);
+
+        const queryEmail = `select * from usuarios where email = $1`;
         
-        if (!usuario.length) {
-            return res.status(404).json('Usuario não encontrado.');
-        }
+        const usuarioEmailExistente = await conexao.query(queryEmail, [email]);
+        
+        if (usuarioEmailExistente.rowCount > 0) { 
+            if (usuarioEmailExistente.rows[0].id !== usuario.id) {
+                return res.status(400).json({
+                    "mensagem": "O e-mail informado já está sendo utilizado por outro usuário."
+                })
+            }
+        };
+
+    } catch (error) {
+        return res.status(400).json(error.message);
+    }
+
+    try {
+
+        const hash = (await pwd.hash(Buffer.from(senha))).toString('hex');
 
         const query = `update usuarios set 
         nome = $1,
@@ -102,17 +112,17 @@ const atualizarUsuario = async (req, res) => {
         where id = $4`;
 
         const usuarioAtualizado = await conexao.query(query, [
-            !nome ? usuario[0].nome : nome,  
-            !email ? usuario[0].email : email, 
-            !senha ? usuario[0].senha : senha, 
-            id
+            nome, 
+            email, 
+            hash,
+            usuario.id
         ]);
 
         if (usuarioAtualizado.rowCount === 0) {
-            return res.status(400).json('Não foi possível atualizar o usuario');
+            return res.status(400).json({"mensagem": "Não foi possível atualizar o usuario."});
         }
 
-        return res.status(200).json('O usuario foi atualizado com sucesso');
+        return res.send(204);
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -123,9 +133,9 @@ const atualizarUsuario = async (req, res) => {
 const login = async (req, res) => {
     const { email, senha } = req.body;
 
-    if(!email) { return res.status(400).json("O email é obrigatório.") };
+    const erro = verificarBodyLogin(req.body);
     
-    if(!senha) { return res.status(400).json("A senha é obrigatória.") };
+    if (erro) { return res.status(400).json({"mensagem": erro}) };
 
     try {
         const query = `select * from usuarios where email = $1`;
@@ -137,31 +147,31 @@ const login = async (req, res) => {
 
         const result = await pwd.verify(Buffer.from(senha), Buffer.from(usuario.senha, 'hex'));
   
-    switch (result) {
-        case securePassword.INVALID_UNRECOGNIZED_HASH:
-        case securePassword.INVALID:
-            return res.status(400).json("A senha está incorreta.");
-        case securePassword.VALID:
-            break;
-        case securePassword.VALID_NEEDS_REHASH:
-            try {
+        switch (result) {
+            case securePassword.INVALID_UNRECOGNIZED_HASH:
+            case securePassword.INVALID:
+                return res.status(400).json("A senha está incorreta.");
+            case securePassword.VALID:
+                break;
+            case securePassword.VALID_NEEDS_REHASH:
+                try {
 
-                const hash = (await pwd.hash(Buffer.from(senha))).toString('hex');
+                    const hash = (await pwd.hash(Buffer.from(senha))).toString('hex');
 
-                const query = `update usuarios set senha = $1 where email = $2`;
-                
-                await conexao.query(query, [hash, email]);
-                
-            } catch {
-            }
+                    const query = `update usuarios set senha = $1 where email = $2`;
+                    
+                    await conexao.query(query, [hash, email]);
+                    
+                } catch {
+                }
             break;
-    }
+        }
 
         const token = jwt.sign({
             id: usuario.id,
             nome: usuario.nome,
             email: usuario.email
-        }, jwtSecret, {expiresIn: '1h'});
+        }, jwtSecret, {expiresIn: '3h'});
 
         return res.status(200).json({ 
             usuario: {
@@ -169,7 +179,7 @@ const login = async (req, res) => {
                 nome: usuario.nome,
                 email: usuario.email
             }, 
-            token 
+            token
         });
 
     } catch (error) {
