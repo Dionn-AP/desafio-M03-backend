@@ -8,7 +8,7 @@ create table usuarios(
     id serial primary key,
     nome text not null,
     email varchar(150) unique not null,
-    senha varchar(14) not null
+    senha text not null
 );
 
 
