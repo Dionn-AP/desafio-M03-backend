@@ -1,8 +1,9 @@
 const express = require('express');
 
-const categorias  = require('./controladores/categorias');
+const categorias = require('./controladores/categorias');
 const usuarios = require('./controladores/usuarios');
 const validarLogin = require('./intermediarios/validacao_usuario');
+const transacoes = require('./controladores/transacoes');
 
 const rota = express();
 
@@ -18,11 +19,12 @@ rota.put('/usuario/', usuarios.atualizarUsuario);
 
 
 //ROTAS TRANSAÇÕES
-rota.get('/transacao', );
-rota.get('/transacao/:id', );
-rota.post('/transacao', );
-rota.put('/transacao/:id', );
-rota.delete('/transacao/:id', );
+rota.get('/transacao/extrato', transacoes.obterExtrato);
+rota.get('/transacao', transacoes.listarTransacoes);
+rota.get('/transacao/:id', transacoes.detalharTransacao);
+rota.post('/transacao', transacoes.cadastrarTransacao);
+rota.put('/transacao/:id', transacoes.atualizarTransacao);
+rota.delete('/transacao/:id', transacoes.excluirTransacao);
 
 
 //ROTAS CATEGORIA
