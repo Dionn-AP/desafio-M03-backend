@@ -1,4 +1,5 @@
 const conexao = require('../conexao');
+const { verificarBodyTransacoes } = require('../funcoes_verificacao/verificar_requisicao_body');
 
 
 const listarTransacoes = async (req, res) => {
@@ -45,15 +46,9 @@ const cadastrarTransacao = async (req, res) => {
     const { tipo, descricao, valor, data, categoria_id } = req.body;
     const { usuario } = req;
 
-    if (!valor) {
-        return res.status(404).json({"mensagem": "O campo valor é obrigatório."})
-    }
-    if (!categoria_id) {
-        return res.status(404).json({"mensagem": "O campo categoria é obrigatório."})
-    }
-    if (!tipo) {
-        return res.status(404).json({"mensagem": "O campo tipo é obrigatório."})
-    }
+    const erro = verificarBodyTransacoes(req.body);
+    
+    if (erro) { return res.status(400).json({"mensagem": erro}) };
 
     try {
         const query = `
@@ -81,15 +76,9 @@ const atualizarTransacao = async (req, res) => {
     const { usuario } = req;
     const { id: idTransacao } = req.params;
 
-    if (!valor) {
-        return res.status(404).json({"mensagem": "O campo valor é obrigatório."})
-    }
-    if (!categoria_id) {
-        return res.status(404).json({"mensagem": "O campo categoria é obrigatório."})
-    }
-    if (!tipo) {
-        return res.status(404).json({"mensagem": "O campo tipo é obrigatório."})
-    }
+    const erro = verificarBodyTransacoes(req.body);
+    
+    if (erro) { return res.status(400).json({"mensagem": erro}) };
 
     try {
 
