@@ -50,6 +50,10 @@ const cadastrarTransacao = async (req, res) => {
     
     if (erro) { return res.status(400).json({"mensagem": erro}) };
 
+    if (tipo !== 'entrada' && tipo !== 'saida') {
+        return res.status(400).json({"mensagem": "O tipo de transação especificado é inválido."});
+    }
+
     try {
         const query = `
         insert into transacoes 
@@ -58,13 +62,32 @@ const cadastrarTransacao = async (req, res) => {
         ($1, $2, $3, $4, $5, $6)
         `;
 
+        const queryCategoria = `select * from categorias where id = $1`;
+
+        const categoriaEncontrada = await conexao.query(queryCategoria, [categoria_id]);
+
+        if (categoriaEncontrada.rowCount === 0) {
+            return res.status(400).json({"mensagem": "Não existe categoria para o Id informado."});
+        }
+
         const cadastroTransacao = await conexao.query(query, [descricao, valor, data, categoria_id, usuario.id, tipo]);
+        
+        const { rows: transacaoEncontrada } = await conexao.query(`select * from transacoes where usuario_id = $1`, [usuario.id]);
 
         if (cadastroTransacao.rowCount === 0) {
             return res.status(400).json({"mensagem": "Não foi possível cadastrar a transação."});
         }
 
-        return res.status(200).json({"mensagem": "Transação cadastrada com sucesso."});
+        return res.status(200).json({
+            id: transacaoEncontrada[transacaoEncontrada.length - 1].id,
+            tipo,
+            descricao,
+            valor,
+            data,
+            usuario_id: usuario.id,
+            categoria_id,
+            categoria_nome: categoriaEncontrada.rows[0].nome,
+        });
 
     } catch (error) {
         return res.status(400).json(error.message);
