@@ -64,9 +64,9 @@ const listarPerfilUsuarios = async (req, res) => {
         const { rows: perfilUsuarios } = await conexao.query(`select * from usuarios where id = $1`, [usuario.id]);
 
         return res.status(200).json({
-            "id": perfilUsuarios[0].id,
-            "nome": perfilUsuarios[0].nome,
-            "email": perfilUsuarios[0].email
+            id: perfilUsuarios[0].id,
+            nome: perfilUsuarios[0].nome,
+            email: perfilUsuarios[0].email
         });
 
     } catch (error) {
