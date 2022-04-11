@@ -21,13 +21,17 @@ const verificarBodyLogin = (usuario) => {
 };
 
 const verificarBodyTransacoes = (usuario) => {
-    const { tipo, valor, categoria_id } = usuario;
+    const { tipo, valor, categoria_id, descricao, data } = usuario;
 
     if(!valor) return "O campo valor é obrigatório."
 
     if(!categoria_id) return "O campo categoria é obrigatório."
 
     if(!tipo) return "O campo tipo é obrigatório."
+
+    if(!data) return "O campo data é obrigatório."
+
+    if(!descricao) return "O descricao tipo é obrigatório."
 };
 
 module.exports = {
