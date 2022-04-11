@@ -30,21 +30,24 @@ const detalharTransacao = async (req, res) => {
     const { id: idTransacao } = req.params;
     const { usuario } = req;
 
-    if (!idTransacao) {
-        return res.status(404).json({"mensagem": "O id deve ser informado."});
-    }
-
     try {
-        const query = 'select * from transacoes where id = $1';
-        const transacao = await conexao.query(query, [idTransacao]);
+        const query = 'select * from transacoes where id = $1 and usuario_id = $2';
+        const transacao = await conexao.query(query, [idTransacao, usuario.id]);
 
         if (transacao.rowCount === 0) {
-            return res.status(404).json({"mensagem": "transação inexistente."});
+            return res.status(404).json({"mensagem": "Transação inexistente."});
         }
 
         if (transacao.rows[0].usuario_id !== usuario.id) {
-            return res.status(404).json({"mensagem": "transação inexistente."});
+            return res.status(404).json({"mensagem": "Transação inexistente."});
         }
+
+        const { rows: nomeCategoria } = await conexao.query(
+            `select nome from categorias where id = $1`, 
+            [transacao.rows[0].categoria_id]
+        );
+
+        transacao.rows[0].categoria_nome = nomeCategoria[0].nome;
 
         return res.status(200).json(transacao.rows[0]);
     } catch (error) {
@@ -181,20 +184,20 @@ const obterExtrato = async (req, res) => {
         let saida = 0;
         for (const transacao of transacoes) {
             if (transacao.tipo === 'saida') {
-                saida = saida + transacao.valor;
+                saida += transacao.valor;
             }
         }
 
         let entrada = 0;
         for (const transacao of transacoes) {
             if (transacao.tipo === 'entrada') {
-                entrada = entrada + transacao.valor;
+                entrada += transacao.valor;
             }
         }
 
         const extrato = {
-            entrada: entrada,
-            saida: saida
+            entrada,
+            saida
         }
 
         return res.status(200).json(extrato);
