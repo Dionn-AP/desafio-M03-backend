@@ -153,7 +153,7 @@ const atualizarTransacao = async (req, res) => {
             return res.status(400).json({"mensagem": "Não foi possível atualizar a transação."});
         }
 
-        return res.status(200).json({"mensagem": "Transação atualizada com sucesso."});
+        return res.send(200);
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -167,20 +167,20 @@ const excluirTransacao = async (req, res) => {
     try {
 
         const query = 'select * from transacoes where id = $1';
-        const econtrarTransacao = await conexao.query(query, [idTransacao]);
+        const encontrarTransacao = await conexao.query(query, [idTransacao]);
 
-        if (econtrarTransacao.rowCount === 0) {
+        if (encontrarTransacao.rowCount === 0) {
             return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
-        if (econtrarTransacao.rows[0].usuario_id !== usuario.id) {
+        if (encontrarTransacao.rows[0].usuario_id !== usuario.id) {
             return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
         const queryDelete = 'delete from transacoes where id = $1';
-        const deletar = await conexao.query(queryDelete, [idTransacao]);
+        await conexao.query(queryDelete, [idTransacao]);
 
-        return res.status(200).json({"mensagem": "Transação deletada com sucesso."});
+        return res.send(204);
 
     } catch (error) {
         return res.status(400).json(error.message);
