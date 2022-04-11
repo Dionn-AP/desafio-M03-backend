@@ -153,7 +153,7 @@ const atualizarTransacao = async (req, res) => {
             return res.status(400).json({"mensagem": "Não foi possível atualizar a transação."});
         }
 
-        return res.send(204);
+        return res.sendStatus(204);
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -180,7 +180,7 @@ const excluirTransacao = async (req, res) => {
         const queryDelete = 'delete from transacoes where id = $1';
         await conexao.query(queryDelete, [idTransacao]);
 
-        return res.send(204);
+        return res.sendStatus(204);
 
     } catch (error) {
         return res.status(400).json(error.message);
