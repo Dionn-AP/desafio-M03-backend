@@ -8,6 +8,16 @@ const listarTransacoes = async (req, res) => {
     try {
         const query = 'select * from transacoes where usuario_id = $1';
         const { rows: transacoes } = await conexao.query(query, [usuario.id]);
+        
+
+        for (const transacao of transacoes) {
+            const { rows: nomeCategoria } = await conexao.query(
+                    `select nome from categorias where id = $1`, 
+                    [transacao.categoria_id]
+                );
+          
+            transacao.categoria_nome = nomeCategoria[0].nome;
+        }
 
         return res.status(200).json(transacoes);
 
