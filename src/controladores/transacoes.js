@@ -153,7 +153,7 @@ const atualizarTransacao = async (req, res) => {
             return res.status(400).json({"mensagem": "Não foi possível atualizar a transação."});
         }
 
-        return res.send(200);
+        return res.send(204);
 
     } catch (error) {
         return res.status(400).json(error.message);
