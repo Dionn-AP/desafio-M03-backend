@@ -20,7 +20,7 @@ const detalharTransacao = async (req, res) => {
     const { usuario } = req;
 
     if (!idTransacao) {
-        return res.status(404).json('O id deve ser informado');
+        return res.status(404).json({"mensagem": "O id deve ser informado."});
     }
 
     try {
@@ -28,11 +28,11 @@ const detalharTransacao = async (req, res) => {
         const transacao = await conexao.query(query, [idTransacao]);
 
         if (transacao.rowCount === 0) {
-            return res.status(404).json('transação inexistente');
+            return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
         if (transacao.rows[0].usuario_id !== usuario.id) {
-            return res.status(404).json('transação inexistente');
+            return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
         return res.status(200).json(transacao.rows[0]);
@@ -46,13 +46,13 @@ const cadastrarTransacao = async (req, res) => {
     const { usuario } = req;
 
     if (!valor) {
-        return res.status(404).json('O campo valor é obrigatório')
+        return res.status(404).json({"mensagem": "O campo valor é obrigatório."})
     }
     if (!categoria_id) {
-        return res.status(404).json('O campo categoria é obrigatório')
+        return res.status(404).json({"mensagem": "O campo categoria é obrigatório."})
     }
     if (!tipo) {
-        return res.status(404).json('O campo tipo é obrigatório')
+        return res.status(404).json({"mensagem": "O campo tipo é obrigatório."})
     }
 
     try {
@@ -66,10 +66,10 @@ const cadastrarTransacao = async (req, res) => {
         const cadastroTransacao = await conexao.query(query, [descricao, valor, data, categoria_id, usuario.id, tipo]);
 
         if (cadastroTransacao.rowCount === 0) {
-            return res.status(400).json('Não foi possível cadastrar a transação');
+            return res.status(400).json({"mensagem": "Não foi possível cadastrar a transação."});
         }
 
-        return res.status(200).json('Transação cadastrada com sucesso');
+        return res.status(200).json({"mensagem": "Transação cadastrada com sucesso."});
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -82,13 +82,13 @@ const atualizarTransacao = async (req, res) => {
     const { id: idTransacao } = req.params;
 
     if (!valor) {
-        return res.status(404).json('O campo valor é obrigatório')
+        return res.status(404).json({"mensagem": "O campo valor é obrigatório."})
     }
     if (!categoria_id) {
-        return res.status(404).json('O campo categoria é obrigatório')
+        return res.status(404).json({"mensagem": "O campo categoria é obrigatório."})
     }
     if (!tipo) {
-        return res.status(404).json('O campo tipo é obrigatório')
+        return res.status(404).json({"mensagem": "O campo tipo é obrigatório."})
     }
 
     try {
@@ -108,10 +108,10 @@ const atualizarTransacao = async (req, res) => {
         const atualizarTransacao = await conexao.query(query, [descricao, valor, data, categoria_id, usuario.id, tipo, idTransacao]);
 
         if (atualizarTransacao.rowCount === 0) {
-            return res.status(400).json('Não foi possível atualizar a transação');
+            return res.status(400).json({"mensagem": "Não foi possível atualizar a transação."});
         }
 
-        return res.status(200).json('Transação atualizada com sucesso');
+        return res.status(200).json({"mensagem": "Transação atualizada com sucesso."});
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -128,17 +128,17 @@ const excluirTransacao = async (req, res) => {
         const econtrarTransacao = await conexao.query(query, [idTransacao]);
 
         if (econtrarTransacao.rowCount === 0) {
-            return res.status(404).json('transação inexistente');
+            return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
         if (econtrarTransacao.rows[0].usuario_id !== usuario.id) {
-            return res.status(404).json('transação inexistente');
+            return res.status(404).json({"mensagem": "transação inexistente."});
         }
 
         const queryDelete = 'delete from transacoes where id = $1';
         const deletar = await conexao.query(queryDelete, [idTransacao]);
 
-        return res.status(200).json('Transação deletada com sucesso');
+        return res.status(200).json({"mensagem": "Transação deletada com sucesso."});
 
     } catch (error) {
         return res.status(400).json(error.message);
@@ -153,7 +153,7 @@ const obterExtrato = async (req, res) => {
         const { rows: transacoes, rowCount } = await conexao.query(query, [usuario.id]);
 
         if (rowCount === 0) {
-            return res.status(200).json('Não existem transacoes');
+            return res.status(200).json({"mensagem": "Não existem transacoes."});
         }
 
         let saida = 0;
