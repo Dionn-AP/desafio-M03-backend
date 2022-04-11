@@ -116,12 +116,29 @@ const atualizarTransacao = async (req, res) => {
     
     if (erro) { return res.status(400).json({"mensagem": erro}) };
 
+    if (tipo !== 'entrada' && tipo !== 'saida') {
+        return res.status(400).json({"mensagem": "O tipo de transação especificado é inválido."});
+    }
+
     try {
 
-        const transacaoAlterada = await conexao.query('select * from transacoes where id = $1', [idTransacao]);
+        const transacaoEncontrada = await conexao.query('select * from transacoes where id = $1', [idTransacao]);
 
-        if (transacaoAlterada.rows[0].usuario_id !== usuario.id) {
-            return res.status(404).json('transação inexistente');
+        if (transacaoEncontrada.rowCount === 0) {
+            return res.status(404).json({"mensagem": "transação inexistente."});
+        }
+
+        if (transacaoEncontrada.rows[0].usuario_id !== usuario.id) {
+            return res.status(404).json({"mensagem": "Você só pode atualizar suas próprias transações."});
+        }
+
+        const existeCategoria = await conexao.query(
+            `select * from categorias where id = $1`, 
+            [categoria_id]
+        );
+
+        if (existeCategoria.rowCount === 0) {
+            return res.status(404).json({"mensagem": "Categoria da transação inexistente."});
         }
 
         const query = `
